@@ -79,7 +79,7 @@ const AddMoneyModal: React.FC<ModalProps> = ({ open, onCancel, player }) => {
               `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
             }
             // Dòng này chịu trách nhiệm xóa dấu phẩy đi khi xử lý giá trị
-            parser={(value) => value!.replace(/,/g, "")}
+            parser={(value: any) => value!.replace(/,/g, "")}
             controls={true}
             style={{ width: "100%" }}
           />
@@ -159,7 +159,7 @@ const SubtractMoneyModal: React.FC<ModalProps> = ({
               `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
             }
             // Dòng này chịu trách nhiệm xóa dấu phẩy đi khi xử lý giá trị
-            parser={(value) => value!.replace(/,/g, "")}
+            parser={(value: any) => value!.replace(/,/g, "")}
             controls={true}
             style={{ width: "100%" }}
           />
