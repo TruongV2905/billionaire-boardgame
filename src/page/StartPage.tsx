@@ -1,8 +1,9 @@
 import { Button, Form, InputNumber, Modal, Input } from "antd";
-import  { useState } from "react";
-import { setPlayers} from "../redux/features/playersSlice";
+import { useState } from "react";
+import { setPlayers } from "../redux/features/playersSlice";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import type { Player } from "../types/player";
 
 interface FormValues {
   player: number;
