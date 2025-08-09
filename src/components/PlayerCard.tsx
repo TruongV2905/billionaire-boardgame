@@ -100,7 +100,7 @@ const AddMoneyModal: React.FC<ModalProps> = ({ open, onCancel, player }) => {
         >
           <Select placeholder="Chọn nguồn">
             <Select.Option value="bank">🏦 Ngân hàng</Select.Option>
-            <Select.Option value="all">Tất cả</Select.Option>
+            <Select.Option value="all">👤 Tất cả</Select.Option>
             {otherPlayers.map((p) => (
               <Select.Option key={p.id} value={p.id}>
                 {p.name}
