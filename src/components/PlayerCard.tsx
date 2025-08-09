@@ -1,92 +1,86 @@
 import React from "react";
 import type { Player } from "../types/player";
-import { Button, Form, InputNumber, Modal, Select } from "antd";
+import { Button, Form, InputNumber, Modal, Select, Slider } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import {
   addMoney,
   subtractMoney,
   transferMoney,
 } from "../redux/features/playersSlice";
+
 interface PlayerCardProps {
   player: Player;
 }
 
-const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [isSubtractModalOpen, setIsSubtractModalOpen] = React.useState(false);
-  const [form] = Form.useForm();
+interface ModalProps {
+  open: boolean;
+  onCancel: () => void;
+  player: Player;
+}
 
+const AddMoneyModal: React.FC<ModalProps> = ({ open, onCancel, player }) => {
+  const [form] = Form.useForm();
   const dispatch = useDispatch();
   const players: Player[] = useSelector((state: any) => state.players);
+  const otherPlayers = players.filter((p) => p.id !== player.id);
 
-  const openModal = (type: "add" | "subtract") => {
-    form.resetFields();
-    form.setFieldValue("id", player.id);
-    if (type === "add") {
-      setIsOpen(true);
-    } else {
-      setIsSubtractModalOpen(true);
+  React.useEffect(() => {
+    if (open) {
+      form.resetFields();
+      form.setFieldsValue({
+        id: player.id,
+        money: 0,
+        idFrom: "bank",
+      });
     }
-  };
-
-  const handleCancel = () => {
-    setIsOpen(false);
-    setIsSubtractModalOpen(false);
-    form.resetFields();
-  };
+  }, [open, player.id, form]);
 
   const handleFinish = (values: {
     money: number;
     idFrom?: number | "bank";
   }) => {
-    console.log(values);
-    if (isOpen) {
-      if (values.idFrom === "bank") {
-        dispatch(addMoney({ id: player.id, amount: values.money }));
-      } else {
-        dispatch(
-          transferMoney({
-            fromId: values.idFrom as number,
-            toId: player.id,
-            amount: values.money,
-          })
-        );
-      }
-    } else if (isSubtractModalOpen) {
-      dispatch(subtractMoney({ id: player.id, amount: values.money }));
+    if (values.idFrom === "bank") {
+      dispatch(addMoney({ id: player.id, amount: values.money }));
+    } else {
+      dispatch(
+        transferMoney({
+          fromId: values.idFrom as number,
+          toId: player.id,
+          amount: values.money,
+        })
+      );
     }
-
-    handleCancel();
+    onCancel();
   };
 
-  const otherPlayers = players?.filter((p) => p.id !== player.id);
+  return (
+    <Modal
+      open={open}
+      onCancel={onCancel}
+      footer={null}
+      title={`Cộng tiền cho ${player.name}`}
+    >
+      <Form form={form} layout="vertical" onFinish={handleFinish}>
+        <Form.Item name="id" hidden>
+          <InputNumber />
+        </Form.Item>
 
-  const renderModalContent = (title: string) => (
-    <Form form={form} layout="vertical" onFinish={handleFinish}>
-      <Form.Item hidden name="id">
-        <InputNumber />
-      </Form.Item>
+        <Form.Item
+          name="money"
+          label="Số tiền"
+          rules={[{ required: true, message: "Vui lòng nhập số tiền" }]}
+        >
+          <Slider
+            min={0}
+            max={5000}
+            step={10}
+            tooltip={{ formatter: (val) => `${val?.toLocaleString()} $` }}
+          />
+        </Form.Item>
 
-      <Form.Item
-        name="money"
-        label="Số tiền"
-        rules={[{ required: true, message: "Vui lòng nhập số tiền" }]}
-      >
-        <InputNumber
-          style={{ width: "100%" }}
-          step={10000}
-          formatter={(value) =>
-            `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-          }
-          parser={(value: any) => value!.replace(/\$\s?|(,*)/g, "")}
-          min={0}
-        />
-      </Form.Item>
-
-      {title.includes("Cộng") ? (
         <Form.Item
           name="idFrom"
-          label={title.includes("Cộng") ? "Nhận tiền từ" : "Chuyển tiền cho"}
+          label="Nhận tiền từ"
           rules={[{ required: true, message: "Vui lòng chọn một nguồn" }]}
         >
           <Select placeholder="Chọn nguồn">
@@ -98,17 +92,79 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
             ))}
           </Select>
         </Form.Item>
-      ) : (
-        <></>
-      )}
 
-      <Form.Item>
-        <Button type="primary" htmlType="submit" block>
-          Xác nhận
-        </Button>
-      </Form.Item>
-    </Form>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            Xác nhận
+          </Button>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
+};
+
+const SubtractMoneyModal: React.FC<ModalProps> = ({
+  open,
+  onCancel,
+  player,
+}) => {
+  const [form] = Form.useForm();
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    if (open) {
+      form.resetFields();
+      form.setFieldsValue({
+        id: player.id,
+        money: 0,
+      });
+    }
+  }, [open, player.id, form]);
+
+  const handleFinish = (values: { money: number }) => {
+    dispatch(subtractMoney({ id: player.id, amount: values.money }));
+    onCancel();
+  };
+
+  return (
+    <Modal
+      open={open}
+      onCancel={onCancel}
+      footer={null}
+      title={`Trừ tiền của ${player.name}`}
+    >
+      <Form form={form} layout="vertical" onFinish={handleFinish}>
+        <Form.Item name="id" hidden>
+          <InputNumber />
+        </Form.Item>
+
+        <Form.Item
+          name="money"
+          label="Số tiền"
+          rules={[{ required: true, message: "Vui lòng nhập số tiền" }]}
+        >
+          <Slider
+            min={0}
+            max={5000}
+            step={10}
+            tooltip={{ formatter: (val) => `${val?.toLocaleString()} $` }}
+          />
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            Xác nhận
+          </Button>
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+};
+
+const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
+  const [isAddOpen, setIsAddOpen] = React.useState(false);
+  const [isSubtractOpen, setIsSubtractOpen] = React.useState(false);
+  const dispatch = useDispatch();
 
   return (
     <>
@@ -138,14 +194,14 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
         {/* Buttons */}
         <div className="flex flex-col gap-2 mt-4 md:mt-0 md:ml-4 w-full md:w-auto">
           <button
-            onClick={() => openModal("add")}
+            onClick={() => setIsAddOpen(true)}
             className="w-full px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75"
           >
             + Tiền
           </button>
 
           <button
-            onClick={() => openModal("subtract")}
+            onClick={() => setIsSubtractOpen(true)}
             className="w-full px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75"
           >
             - Tiền
@@ -160,24 +216,16 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
         </div>
       </div>
 
-      <Modal
-        open={isOpen}
-        onCancel={handleCancel}
-        footer={null}
-        title={`Cộng tiền cho ${player.name}`}
-      >
-        {renderModalContent(`Cộng tiền cho ${player.name}`)}
-      </Modal>
-
-      <Modal
-        style={{ margin: "0 10px" }}
-        open={isSubtractModalOpen}
-        onCancel={handleCancel}
-        footer={null}
-        title={`Trừ tiền của ${player.name}`}
-      >
-        {renderModalContent(`Trừ tiền của ${player.name}`)}
-      </Modal>
+      <AddMoneyModal
+        open={isAddOpen}
+        onCancel={() => setIsAddOpen(false)}
+        player={player}
+      />
+      <SubtractMoneyModal
+        open={isSubtractOpen}
+        onCancel={() => setIsSubtractOpen(false)}
+        player={player}
+      />
     </>
   );
 };
