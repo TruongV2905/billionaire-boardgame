@@ -170,6 +170,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
       </Modal>
 
       <Modal
+        style={{ margin: "0 10px" }}
         open={isSubtractModalOpen}
         onCancel={handleCancel}
         footer={null}
