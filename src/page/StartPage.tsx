@@ -1,6 +1,6 @@
 import { Button, Form, InputNumber, Modal, Input } from "antd";
-import React, { useState } from "react";
-import { setPlayers, type Player } from "../redux/features/playersSlice";
+import  { useState } from "react";
+import { setPlayers} from "../redux/features/playersSlice";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
