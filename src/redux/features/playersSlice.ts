@@ -71,6 +71,43 @@ const playersSlice = createSlice({
       fromPlayer.money -= amount;
       toPlayer.money += amount;
     },
+
+    transferAllToOne: (
+      state,
+      action: PayloadAction<{ toId: number; amountPerPlayer: number }>
+    ) => {
+      const { toId, amountPerPlayer } = action.payload;
+      const toPlayer = state.find((p) => p.id === toId);
+      if (!toPlayer) return;
+
+      // Lưu tên những người không đủ tiền để hiển thị 1 lần
+      const notEnoughPlayers: string[] = [];
+
+      state.forEach((player) => {
+        if (player.id !== toId) {
+          if (player.money < amountPerPlayer) {
+            notEnoughPlayers.push(player.name);
+          } else {
+            player.money -= amountPerPlayer;
+            toPlayer.money += amountPerPlayer;
+          }
+        }
+      });
+
+      if (notEnoughPlayers.length > 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Một số người không đủ tiền",
+          html: `Không chuyển được tiền từ: <b>${notEnoughPlayers.join(
+            ", "
+          )}</b>`,
+        });
+      }
+    },
+    removePlayer: (state, action: PayloadAction<{ id: number }>) => {
+      const idToRemove = action.payload.id;
+      return state.filter((player) => player.id !== idToRemove);
+    },
   },
 });
 
@@ -80,5 +117,7 @@ export const {
   addMoney,
   subtractMoney,
   transferMoney,
+  removePlayer,
+  transferAllToOne, // nhớ export reducer mới thêm
 } = playersSlice.actions;
 export default playersSlice.reducer;

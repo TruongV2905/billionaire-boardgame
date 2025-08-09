@@ -4,9 +4,12 @@ import { Button, Form, InputNumber, Modal, Select } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import {
   addMoney,
+  removePlayer,
   subtractMoney,
+  transferAllToOne,
   transferMoney,
 } from "../redux/features/playersSlice";
+import Swal from "sweetalert2";
 
 interface PlayerCardProps {
   player: Player;
@@ -37,11 +40,18 @@ const AddMoneyModal: React.FC<ModalProps> = ({ open, onCancel, player }) => {
 
   const handleFinish = (values: {
     money: number;
-    idFrom?: number | "bank";
+    idFrom?: number | "bank" | "all";
   }) => {
     if (values.idFrom === "bank") {
+      // Cộng tiền từ ngân hàng
       dispatch(addMoney({ id: player.id, amount: values.money }));
+    } else if (values.idFrom === "all") {
+      // Trừ tiền tất cả người chơi khác, cộng tổng cho người nhận
+      dispatch(
+        transferAllToOne({ toId: player.id, amountPerPlayer: values.money })
+      );
     } else {
+      // Chuyển tiền từ người chơi khác
       dispatch(
         transferMoney({
           fromId: values.idFrom as number,
@@ -74,11 +84,9 @@ const AddMoneyModal: React.FC<ModalProps> = ({ open, onCancel, player }) => {
             min={0}
             max={5000}
             step={10}
-            // Dòng này chịu trách nhiệm thêm dấu phẩy vào số để hiển thị
             formatter={(value) =>
               `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
             }
-            // Dòng này chịu trách nhiệm xóa dấu phẩy đi khi xử lý giá trị
             parser={(value: any) => value!.replace(/,/g, "")}
             controls={true}
             style={{ width: "100%" }}
@@ -92,6 +100,7 @@ const AddMoneyModal: React.FC<ModalProps> = ({ open, onCancel, player }) => {
         >
           <Select placeholder="Chọn nguồn">
             <Select.Option value="bank">🏦 Ngân hàng</Select.Option>
+            <Select.Option value="all">Tất cả</Select.Option>
             {otherPlayers.map((p) => (
               <Select.Option key={p.id} value={p.id}>
                 {p.name}
@@ -154,11 +163,9 @@ const SubtractMoneyModal: React.FC<ModalProps> = ({
             min={0}
             max={5000}
             step={10}
-            // Dòng này chịu trách nhiệm thêm dấu phẩy vào số để hiển thị
             formatter={(value) =>
               `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
             }
-            // Dòng này chịu trách nhiệm xóa dấu phẩy đi khi xử lý giá trị
             parser={(value: any) => value!.replace(/,/g, "")}
             controls={true}
             style={{ width: "100%" }}
@@ -226,6 +233,31 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
             className="w-full px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
           >
             🚀 Khởi hành
+          </button>
+          <button
+            onClick={async () => {
+              const result = await Swal.fire({
+                title: `Bạn có chắc muốn phá sản người chơi ${player.name}?`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Có, phá sản!",
+                cancelButtonText: "Hủy",
+              });
+
+              if (result.isConfirmed) {
+                dispatch(removePlayer({ id: player.id }));
+                Swal.fire(
+                  "Đã phá sản!",
+                  `${player.name} đã bị loại khỏi trò chơi.`,
+                  "success"
+                );
+              }
+            }}
+            className="w-full px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-75"
+          >
+            💥 Phá sản
           </button>
         </div>
       </div>
