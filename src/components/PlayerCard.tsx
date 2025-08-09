@@ -1,6 +1,6 @@
 import React from "react";
 import type { Player } from "../types/player";
-import { Button, Form, InputNumber, Modal, Select, Slider } from "antd";
+import { Button, Form, InputNumber, Modal, Select } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import {
   addMoney,
@@ -70,11 +70,18 @@ const AddMoneyModal: React.FC<ModalProps> = ({ open, onCancel, player }) => {
           label="Số tiền"
           rules={[{ required: true, message: "Vui lòng nhập số tiền" }]}
         >
-          <Slider
+          <InputNumber
             min={0}
             max={5000}
             step={10}
-            tooltip={{ formatter: (val) => `${val?.toLocaleString()} $` }}
+            // Dòng này chịu trách nhiệm thêm dấu phẩy vào số để hiển thị
+            formatter={(value) =>
+              `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            }
+            // Dòng này chịu trách nhiệm xóa dấu phẩy đi khi xử lý giá trị
+            parser={(value) => value!.replace(/,/g, "")}
+            controls={true}
+            style={{ width: "100%" }}
           />
         </Form.Item>
 
@@ -143,11 +150,18 @@ const SubtractMoneyModal: React.FC<ModalProps> = ({
           label="Số tiền"
           rules={[{ required: true, message: "Vui lòng nhập số tiền" }]}
         >
-          <Slider
+          <InputNumber
             min={0}
             max={5000}
             step={10}
-            tooltip={{ formatter: (val) => `${val?.toLocaleString()} $` }}
+            // Dòng này chịu trách nhiệm thêm dấu phẩy vào số để hiển thị
+            formatter={(value) =>
+              `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            }
+            // Dòng này chịu trách nhiệm xóa dấu phẩy đi khi xử lý giá trị
+            parser={(value) => value!.replace(/,/g, "")}
+            controls={true}
+            style={{ width: "100%" }}
           />
         </Form.Item>
 
